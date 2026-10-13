@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("CRM.mapper")
+@MapperScan("com.example.cordyscrm.mapper")
 public class CordysCrmApplication {
 
     public static void main(String[] args) {
