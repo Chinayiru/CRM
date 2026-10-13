@@ -6,10 +6,17 @@ spring:
     name: cordys-crm
 
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/cordys_crm?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://127.0.0.1:3306/cordys_crm?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  sql:
+    init:
+      # 首次启动自动执行 db/schema.sql 建表并写入字典种子（脚本幂等）
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      encoding: UTF-8
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
