@@ -12,11 +12,11 @@ import java.util.Map;
  */
 
 @RestController
-public class HearController {
+public class HealthController {
     private final JdbcTemplate jdbcTemplate;
 
 
-    public HearController(JdbcTemplate jdbcTemplate) {
+    public HealthController(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
