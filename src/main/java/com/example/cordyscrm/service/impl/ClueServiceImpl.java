@@ -18,7 +18,7 @@ public class ClueServiceImpl extends ServiceImpl<ClueMapper, Clue> implements Cl
     @Override @Transactional public Clue create(ClueSaveRequest request) {
         Clue entity = new Clue();
         apply(entity, request);
-        if (entity.getStatus() == null) entity.setStatus(NEW);
+        if (entity.getStatus() == null) entity.setStatus("NEW");
         entity.setDeleted(0);
         save(entity);
         return entity;

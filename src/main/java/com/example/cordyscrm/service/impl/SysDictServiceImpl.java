@@ -19,7 +19,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
         SysDict entity = new SysDict();
         apply(entity, request);
         if (entity.getSortNo() == null) entity.setSortNo(0);
-        if (entity.getStatus() == null) entity.setStatus(ENABLED);
+        if (entity.getStatus() == null) entity.setStatus("ENABLED");
         entity.setDeleted(0);
         save(entity);
         return entity;

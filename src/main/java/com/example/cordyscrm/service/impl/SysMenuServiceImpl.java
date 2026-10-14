@@ -19,7 +19,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         SysMenu entity = new SysMenu();
         apply(entity, request);
         if (entity.getSortNo() == null) entity.setSortNo(0);
-        if (entity.getStatus() == null) entity.setStatus(ENABLED);
+        if (entity.getStatus() == null) entity.setStatus("ENABLED");
         entity.setDeleted(0);
         save(entity);
         return entity;

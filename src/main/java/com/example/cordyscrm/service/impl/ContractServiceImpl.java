@@ -20,7 +20,7 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract> i
         Contract entity = new Contract();
         apply(entity, request);
         if (entity.getAmount() == null) entity.setAmount(java.math.BigDecimal.ZERO);
-        if (entity.getStatus() == null) entity.setStatus(DRAFT);
+        if (entity.getStatus() == null) entity.setStatus("DRAFT");
         entity.setDeleted(0);
         save(entity);
         return entity;

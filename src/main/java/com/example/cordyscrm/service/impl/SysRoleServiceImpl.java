@@ -18,8 +18,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override @Transactional public SysRole create(SysRoleSaveRequest request) {
         SysRole entity = new SysRole();
         apply(entity, request);
-        if (entity.getDataScope() == null) entity.setDataScope(SELF);
-        if (entity.getStatus() == null) entity.setStatus(ENABLED);
+        if (entity.getDataScope() == null) entity.setDataScope("SELF");
+        if (entity.getStatus() == null) entity.setStatus("ENABLED");
         entity.setDeleted(0);
         save(entity);
         return entity;

@@ -20,7 +20,7 @@ public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Oppor
         Opportunity entity = new Opportunity();
         apply(entity, request);
         if (entity.getAmount() == null) entity.setAmount(java.math.BigDecimal.ZERO);
-        if (entity.getStage() == null) entity.setStage(INITIAL_CONTACT);
+        if (entity.getStage() == null) entity.setStage("INITIAL_CONTACT");
         entity.setDeleted(0);
         save(entity);
         return entity;
