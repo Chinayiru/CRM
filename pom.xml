@@ -80,6 +80,16 @@
             <scope>test</scope>
         </dependency>
 
+        <!--
+            Spring Boot 4 把 Web MVC 测试切片从 spring-boot-test-autoconfigure 拆了出来，
+            @AutoConfigureMockMvc / MockMvc 需要这个模块。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -87,6 +97,26 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- javac 21 起注解处理默认关闭，显式开启以启用 Lombok -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-proc:full</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <!-- 测试期固定 UTF-8，避免校验消息与断言中的中文在非 UTF-8 控制台乱码 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>

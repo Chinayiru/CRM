@@ -1,17 +1,30 @@
 server:
-  port: ${SERVER_PORT:8081}
+  # 与默认环境（8080）错开，测试环境可以与本机应用同时运行
+  port: ${SERVER_PORT:8082}
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/cordys_crm_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    # 测试环境使用独立的 cordys_crm_test 库，避免污染开发数据
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/cordys_crm_test?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_general_ci&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   sql:
     init:
+      # 测试库每次启动自动建表并写入测试种子数据，schema.sql 与 data.sql 都是幂等的
       mode: always
       schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/test-data.sql
       encoding: UTF-8
+
+  jackson:
+    # LocalDateTime 统一按东八区输出，避免出现带 Z 后缀却填本地时间的歧义
+    time-zone: Asia/Shanghai
 
 mybatis-plus:
   configuration:
+    map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
