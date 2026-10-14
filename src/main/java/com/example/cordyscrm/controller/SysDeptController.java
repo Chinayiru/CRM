@@ -1,11 +1,11 @@
 package com.example.cordyscrm.controller;
 
+import com.example.cordyscrm.common.ApiResponse;
 import com.example.cordyscrm.dto.DeptSaveRequest;
 import com.example.cordyscrm.entity.SysDept;
 import com.example.cordyscrm.service.SysDeptService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,27 +23,26 @@ public class SysDeptController {
     private SysDeptService deptService;
 
     @GetMapping
-    public List<SysDept> list() {
-        return deptService.list();
+    public ApiResponse<List<SysDept>> list() {
+        return ApiResponse.success(deptService.list());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public SysDept create(@Valid @RequestBody DeptSaveRequest request) {
-        return deptService.create(request);
+    public ApiResponse<SysDept> create(@Valid @RequestBody DeptSaveRequest request) {
+        return ApiResponse.success(deptService.create(request));
     }
 
     @PutMapping("/{id}")
-    public SysDept update(
+    public ApiResponse<SysDept> update(
             @PathVariable Long id,
             @Valid @RequestBody DeptSaveRequest request
     ) {
-        return deptService.update(id, request);
+        return ApiResponse.success(deptService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public ApiResponse<Void> delete(@PathVariable Long id) {
         deptService.delete(id);
+        return ApiResponse.success(null);
     }
 }

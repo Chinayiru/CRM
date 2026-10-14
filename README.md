@@ -5,34 +5,52 @@
 
 ## 技术栈
 
-- 后端：Spring Boot 4.1.1（Java 25）、MyBatis-Plus 3.5.17、Sa-Token（认证，后续接入）
+- 后端：Spring Boot 4.1.1（Java 21）、MyBatis-Plus 3.5.17、Sa-Token（认证，后续接入）
 - 数据库：MySQL 8、Redis（缓存，后续接入）
 - 前端：Vue 3 + Vite + Element Plus（独立仓库，后续接入）
 
-## 快速开始
+## 环境配置
 
-### 1. 初始化数据库
+应用提供 `test`（默认）和 `prod` 两套 Spring Profile。数据库凭据通过 `DB_USERNAME`、`DB_PASSWORD` 环境变量提供，不要写入 YAML 文件。
 
-MySQL 8 环境准备就绪后，先创建数据库（一次性操作）：
+### 测试环境
+
+先创建开发与测试数据库：
 
 ```bash
 mysql -u root -p < src/main/resources/db/create-database.sql
 ```
 
-### 2. 启动应用自动建表
+测试环境使用独立的 `cordys_crm_test` 数据库，启动时自动执行 `schema.sql`。PowerShell 示例：
 
-配置 `src/main/resources/application.properties` 中的数据库账号密码，然后启动应用：
-
-```bash
-./mvnw spring-boot:run
+```powershell
+$env:DB_USERNAME = "root"
+$env:DB_PASSWORD = "你的数据库密码"
+.\mvnw.cmd spring-boot:run
 ```
 
-首次启动会自动执行 `db/schema.sql`：创建系统表、业务表（线索、客户、商机、合同、跟进记录、操作日志）并写入字典种子数据。脚本使用 `IF NOT EXISTS`，可重复执行。
+也可以显式指定测试环境：
 
-### 3. 验证
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=test"
+```
+
+### 正式环境
+
+正式环境不会自动运行建表脚本。先按发布流程手动应用数据库变更，再通过环境变量配置正式数据库并启动：
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "prod"
+$env:DB_URL = "jdbc:mysql://数据库主机:3306/cordys_crm?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=true"
+$env:DB_USERNAME = "应用专用账号"
+$env:DB_PASSWORD = "正式数据库密码"
+java -jar target/CordysCRM-0.0.1-SNAPSHOT.jar
+```
+
+### 验证数据库
 
 ```sql
-SHOW TABLES FROM cordys_crm;
+SHOW TABLES FROM cordys_crm_test;
 ```
 
 ## 目录结构
@@ -40,5 +58,5 @@ SHOW TABLES FROM cordys_crm;
 ```
 src/main/resources/db/
 ├── create-database.sql   # 建库脚本（手动执行一次）
-└── schema.sql            # 建表 + 字典种子（应用启动自动执行）
+└── schema.sql            # 建表 + 字典种子（仅测试环境自动执行）
 ```

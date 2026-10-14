@@ -1,5 +1,6 @@
 package com.example.cordyscrm.controller;
 
+import com.example.cordyscrm.common.ApiResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,13 +22,13 @@ public class HealthController {
     }
 
     @GetMapping("/api/health")
-    public Map<String, Object> health() {
+    public ApiResponse<Map<String, Object>> health() {
         Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
 
-        return Map.of(
+        return ApiResponse.success(Map.of(
                 "status", "UP",
                 "database", result != null && result == 1 ? "UP" : "DOWN"
-        );
+        ));
 
     }
 }

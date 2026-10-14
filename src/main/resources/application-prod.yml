@@ -1,0 +1,16 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  sql:
+    init:
+      # Production schema changes are applied explicitly, never at application startup.
+      mode: never
+
+logging:
+  level:
+    com.example.cordyscrm: info
