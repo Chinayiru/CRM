@@ -5,6 +5,7 @@ import com.example.cordyscrm.dto.BootstrapAdminRequest;
 import com.example.cordyscrm.dto.LoginRequest;
 import com.example.cordyscrm.dto.LoginResponse;
 import com.example.cordyscrm.security.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,11 +23,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(security = {})
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(authService.login(request.username(), request.password()));
     }
 
     @PostMapping("/bootstrap")
+    @Operation(security = {})
     public ApiResponse<LoginResponse> bootstrap(@Valid @RequestBody BootstrapAdminRequest request) {
         return ApiResponse.success(authService.bootstrap(request));
     }

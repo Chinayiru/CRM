@@ -80,6 +80,10 @@ $env:BOOTSTRAP_SECRET = "设置一段随机且足够长的初始化密钥"
 
 当前令牌保存在应用进程内存中，应用重启后需要重新登录；适用于单实例阶段。正式部署多实例前应把令牌会话迁移到 Redis 等共享存储。
 
+## Swagger / OpenAPI
+
+测试环境启动后打开 `http://localhost:8082/swagger-ui/index.html` 查看和调试接口。先调用登录或首次管理员初始化接口取得 token，再点击 Swagger UI 的 **Authorize**，输入 token；后续受保护接口会自动附带 Bearer token。OpenAPI JSON 地址为 `/v3/api-docs`。正式环境默认关闭 Swagger UI 与 OpenAPI 文档。
+
 ### 测试环境
 
 先创建开发与测试数据库（脚本同时建 `cordys_crm` 与 `cordys_crm_test`）：
