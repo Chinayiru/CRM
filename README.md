@@ -5,7 +5,7 @@
 
 ## 技术栈
 
-- 后端：Spring Boot 4.1.1（Java 21）、MyBatis-Plus 3.5.17、Sa-Token（认证，后续接入）
+- 后端：Spring Boot 4.1.1（Java 21）、MyBatis-Plus 3.5.17、Bearer token 登录认证
 - 数据库：MySQL 8、Redis（缓存，后续接入）
 - 前端：Vue 3 + Vite + Element Plus（独立仓库，后续接入）
 
@@ -43,8 +43,8 @@
 | --- | --- | --- |
 | 200 | 成功 | 查询、新增、修改、删除均返回 200 |
 | 400 | 参数不合法 | 校验失败、JSON 格式错误、业务规则不满足 |
-| 401 | 未认证 | Sa-Token 接入后使用 |
-| 403 | 权限不足 | Sa-Token 接入后使用 |
+| 401 | 未认证 | 缺少、失效或过期的 Bearer token |
+| 403 | 权限不足 | 初始化密钥错误，或账号没有对应权限 |
 | 404 | 资源不存在 | ID 不存在；引用的关联数据（如负责人）不存在 |
 | 409 | 数据冲突 | 同名部门、用户名已存在、重复授权 |
 | 500 | 服务端异常 | 兜底，响应体不暴露堆栈与 SQL 细节 |
@@ -55,6 +55,31 @@
 
 应用提供 `test`（默认）和 `prod` 两套 Spring Profile。数据库凭据通过 `DB_USERNAME`、`DB_PASSWORD` 环境变量提供，不要写入 YAML 文件。
 
+## 登录认证
+
+除 `/api/health`、`POST /api/auth/login` 和首次初始化接口外，所有 `/api/**` 接口都要求请求头携带有效的 `Authorization: Bearer <token>`。登录令牌默认有效 8 小时。
+
+首次部署且用户表为空时，先设置一次性初始化密钥并启动应用，然后调用 `POST /api/auth/bootstrap` 创建首个管理员账号：
+
+```powershell
+$env:BOOTSTRAP_SECRET = "设置一段随机且足够长的初始化密钥"
+```
+
+请求 JSON 格式：
+
+```json
+{
+  "bootstrapSecret": "与环境变量相同的初始化密钥",
+  "username": "管理员用户名",
+  "password": "至少8位的管理员密码",
+  "nickname": "系统管理员"
+}
+```
+
+初始化接口只在配置了 `BOOTSTRAP_SECRET` 且系统尚无用户时成功；创建后应清除该环境变量。它会返回可直接使用的登录令牌。后续使用 `POST /api/auth/login` 登录，提交用户名和密码；其他 API 调用统一在请求头携带返回的 Bearer token。`POST /api/auth/logout` 会注销当前令牌。
+
+当前令牌保存在应用进程内存中，应用重启后需要重新登录；适用于单实例阶段。正式部署多实例前应把令牌会话迁移到 Redis 等共享存储。
+
 ### 测试环境
 
 先创建开发与测试数据库（脚本同时建 `cordys_crm` 与 `cordys_crm_test`）：
@@ -63,7 +88,7 @@
 mysql -u root -p < src/main/resources/db/create-database.sql
 ```
 
-测试环境使用独立的 `cordys_crm_test` 数据库（端口 8082），启动时自动执行 `schema.sql` 建表与 `test-data.sql` 种子数据。PowerShell 示例：
+测试环境使用独立的 `cordys_crm_test` 数据库（端口 8082），启动时自动执行 `schema.sql` 建表。集成测试会从 `src/test/resources/db/test-data.sql` 加载测试种子数据；本地运行应用时，首次用户通过上面的初始化接口创建。PowerShell 示例：
 
 ```powershell
 $env:DB_USERNAME = "root"

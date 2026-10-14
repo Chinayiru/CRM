@@ -6,6 +6,7 @@ import com.example.cordyscrm.entity.SysUser;
 
 public interface SysUserService extends IService<SysUser> {
     SysUser getUser(Long id);
+    SysUser authenticate(String username, String password);
     SysUser create(SysUserSaveRequest request);
     SysUser update(Long id, SysUserSaveRequest request);
     void delete(Long id);

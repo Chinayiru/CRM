@@ -16,10 +16,10 @@ public enum ResultCode {
     /** 参数校验失败或业务规则不满足。 */
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "请求参数不合法"),
 
-    /** 认证失败（Sa-Token 接入后使用）。 */
+    /** 未登录或 Bearer token 无效、已过期。 */
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "未认证或登录状态已失效"),
 
-    /** 权限不足（Sa-Token 接入后使用）。 */
+    /** 已登录但没有执行该操作的权限。 */
     FORBIDDEN(HttpStatus.FORBIDDEN, "没有访问该资源的权限"),
 
     /** 资源不存在。 */

@@ -22,3 +22,8 @@ mybatis-plus:
 logging:
   level:
     com.example.cordyscrm: info
+
+app:
+  auth:
+    token-ttl-seconds: ${AUTH_TOKEN_TTL_SECONDS:28800}
+    bootstrap-secret: ${BOOTSTRAP_SECRET:}

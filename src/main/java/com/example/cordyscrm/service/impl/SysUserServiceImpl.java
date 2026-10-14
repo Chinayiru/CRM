@@ -14,14 +14,17 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import java.security.SecureRandom;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
     private static final int ITERATIONS = 210_000;
     private static final int KEY_BITS = 256;
     private final SecureRandom secureRandom = new SecureRandom();
+    private static final Pattern PASSWORD_HASH_PATTERN = Pattern.compile("^pbkdf2-sha256\\$[0-9]+\\$[^$]+\\$[^$]+$");
 
     @Override
     public List<SysUser> list() {
@@ -30,6 +33,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public SysUser getUser(Long id) { return getActive(id); }
+
+    @Override
+    public SysUser authenticate(String username, String password) {
+        SysUser user = lambdaQuery().eq(SysUser::getUsername, username.trim()).one();
+        if (user == null || !"ENABLED".equals(user.getStatus())
+                || !matchesPassword(password, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
+        }
+        return user;
+    }
 
     @Override
     @Transactional
@@ -109,6 +122,26 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             throw new IllegalStateException("密码哈希失败", ex);
         } finally {
             spec.clearPassword();
+        }
+    }
+
+    private boolean matchesPassword(String password, String encoded) {
+        if (password == null || encoded == null || !PASSWORD_HASH_PATTERN.matcher(encoded).matches()) return false;
+        String[] parts = encoded.split("\\$", -1);
+        try {
+            int iterations = Integer.parseInt(parts[1]);
+            if (iterations < 1 || iterations > 2_000_000) return false;
+            byte[] salt = Base64.getDecoder().decode(parts[2]);
+            byte[] expected = Base64.getDecoder().decode(parts[3]);
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, expected.length * 8);
+            try {
+                byte[] actual = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+                return MessageDigest.isEqual(expected, actual);
+            } finally {
+                spec.clearPassword();
+            }
+        } catch (Exception exception) {
+            return false;
         }
     }
 }

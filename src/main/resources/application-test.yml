@@ -12,10 +12,10 @@ spring:
 
   sql:
     init:
-      # 测试库每次启动自动建表并写入测试种子数据，schema.sql 与 data.sql 都是幂等的
+      # 测试库启动时自动建表；测试种子只在 test-data.sql 位于运行 classpath 时加载
       mode: always
       schema-locations: classpath:db/schema.sql
-      data-locations: classpath:db/test-data.sql
+      data-locations: optional:classpath:db/test-data.sql
       encoding: UTF-8
 
   jackson:
