@@ -1,0 +1,114 @@
+package com.example.cordyscrm.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import com.example.cordyscrm.dto.SysUserSaveRequest;
+import com.example.cordyscrm.entity.SysUser;
+import com.example.cordyscrm.mapper.SysUserMapper;
+import com.example.cordyscrm.service.SysUserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.List;
+
+@Service
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+    private static final int ITERATIONS = 210_000;
+    private static final int KEY_BITS = 256;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Override
+    public List<SysUser> list() {
+        return lambdaQuery().orderByDesc(SysUser::getId).list();
+    }
+
+    @Override
+    public SysUser getUser(Long id) { return getActive(id); }
+
+    @Override
+    @Transactional
+    public SysUser create(SysUserSaveRequest request) {
+        if (request.password() == null || request.password().length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "新用户密码至少需要8个字符");
+        }
+        validateUsername(request.username(), null);
+        SysUser user = new SysUser();
+        apply(user, request);
+        user.setPasswordHash(hashPassword(request.password()));
+        user.setStatus(request.status() == null ? "ENABLED" : request.status());
+        user.setDeleted(0);
+        save(user);
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public SysUser update(Long id, SysUserSaveRequest request) {
+        SysUser user = getActive(id);
+        validateUsername(request.username(), id);
+        apply(user, request);
+        if (request.password() != null && !request.password().isBlank()) {
+            if (request.password().length() < 8) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "密码至少需要8个字符");
+            }
+            user.setPasswordHash(hashPassword(request.password()));
+        }
+        if (request.status() != null) user.setStatus(request.status());
+        updateById(user);
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        getActive(id);
+        removeById(id);
+    }
+
+    private SysUser getActive(Long id) {
+        SysUser user = getById(id);
+        if (user == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "用户不存在");
+        return user;
+    }
+
+    private void validateUsername(String username, Long excludeId) {
+        LambdaQueryWrapper<SysUser> query = new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username.trim());
+        if (excludeId != null) query.ne(SysUser::getId, excludeId);
+        if (exists(query)) throw new ResponseStatusException(HttpStatus.CONFLICT, "用户名已存在");
+    }
+
+    private void apply(SysUser user, SysUserSaveRequest request) {
+        user.setUsername(request.username().trim());
+        user.setNickname(trimToNull(request.nickname()));
+        user.setPhone(trimToNull(request.phone()));
+        user.setEmail(trimToNull(request.email()));
+        user.setDepartmentId(request.departmentId());
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) return null;
+        String result = value.trim();
+        return result.isEmpty() ? null : result;
+    }
+
+    private String hashPassword(String password) {
+        byte[] salt = new byte[16];
+        secureRandom.nextBytes(salt);
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_BITS);
+        try {
+            byte[] hash = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+            return "pbkdf2-sha256$" + ITERATIONS + "$" + Base64.getEncoder().withoutPadding().encodeToString(salt)
+                    + "$" + Base64.getEncoder().withoutPadding().encodeToString(hash);
+        } catch (Exception ex) {
+            throw new IllegalStateException("密码哈希失败", ex);
+        } finally {
+            spec.clearPassword();
+        }
+    }
+}
