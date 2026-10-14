@@ -2,9 +2,9 @@
 -- 脚本必须幂等，重复启动不能报错，也不能覆盖已有数据。
 -- 所有业务表都有外键约束，因此负责人、客户、商机等关联数据必须成套存在。
 
--- 默认管理员（密码哈希占位，仅用于测试环境；正式环境通过管理流程创建账号）
+-- 默认管理员仅用于测试环境，登录密码为 TestAdmin2026!；正式环境不得加载此脚本。
 INSERT IGNORE INTO `sys_user` (`id`,`username`,`password_hash`,`nickname`,`status`,`deleted`)
-VALUES (1,'admin','{noop}test-only-not-a-real-credential','测试管理员','ENABLED',0);
+VALUES (1,'admin','pbkdf2-sha256$210000$TXFuntVHSQj/s6XaNgiD6A$q0+IuOK7LT+5s3r/hi8dQfkmlZBBjNYTCMr3Bj1MCfo','测试管理员','ENABLED',0);
 
 -- 默认部门
 INSERT IGNORE INTO `sys_dept` (`id`,`parent_id`,`dept_name`,`sort_no`,`status`,`deleted`)

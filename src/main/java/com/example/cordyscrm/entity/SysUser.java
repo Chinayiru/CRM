@@ -19,6 +19,7 @@ public class SysUser {
     private String email;
     private Long departmentId;
     private String status;
+    private String approvalStatus;
     private Long createdBy;
     private LocalDateTime createdAt;
     private Long updatedBy;

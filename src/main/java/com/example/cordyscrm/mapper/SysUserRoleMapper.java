@@ -17,4 +17,11 @@ public interface SysUserRoleMapper {
 
     @Delete("DELETE FROM sys_user_role WHERE user_id=#{userId} AND role_id=#{roleId}")
     int delete(@Param("userId") Long userId, @Param("roleId") Long roleId);
+
+    @Select("SELECT COUNT(*) FROM sys_user_role ur " +
+            "JOIN sys_role r ON r.id=ur.role_id " +
+            "JOIN sys_user u ON u.id=ur.user_id " +
+            "WHERE ur.user_id=#{userId} AND r.role_key=#{roleKey} AND r.status='ENABLED' AND r.deleted=0 " +
+            "AND u.status='ENABLED' AND u.approval_status='APPROVED' AND u.deleted=0")
+    int countEnabledRole(@Param("userId") Long userId, @Param("roleKey") String roleKey);
 }

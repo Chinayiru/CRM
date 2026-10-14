@@ -78,7 +78,11 @@ $env:BOOTSTRAP_SECRET = "设置一段随机且足够长的初始化密钥"
 
 初始化接口只在配置了 `BOOTSTRAP_SECRET` 且系统尚无用户时成功；创建后应清除该环境变量。它会返回可直接使用的登录令牌。后续使用 `POST /api/auth/login` 登录，提交用户名和密码；其他 API 调用统一在请求头携带返回的 Bearer token。`POST /api/auth/logout` 会注销当前令牌。
 
+公开注册接口为 `POST /api/auth/register`。注册账号状态为 `PENDING` 且暂时停用，登录会被拒绝。管理员可通过 `GET /api/admin/registrations` 查看待审核列表，并调用 `POST /api/admin/registrations/{userId}/approve` 或 `/reject` 审核；这些审核接口要求当前登录用户具有 `admin` 角色。测试环境种子管理员为 `admin / TestAdmin2026!`，仅供测试数据库使用。
+
 当前令牌保存在应用进程内存中，应用重启后需要重新登录；适用于单实例阶段。正式部署多实例前应把令牌会话迁移到 Redis 等共享存储。
+
+已有数据库需要先执行一次 `src/main/resources/db/migration/V20261014_02__user_registration_approval.sql`，让现有账号默认保持已审核状态。新建数据库已在 `schema.sql` 中包含该字段。
 
 ## Swagger / OpenAPI
 

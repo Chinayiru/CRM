@@ -3,6 +3,7 @@ package com.example.cordyscrm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.example.cordyscrm.dto.SysUserSaveRequest;
+import com.example.cordyscrm.dto.UserRegistrationRequest;
 import com.example.cordyscrm.entity.SysUser;
 import com.example.cordyscrm.mapper.SysUserMapper;
 import com.example.cordyscrm.service.SysUserService;
@@ -37,11 +38,72 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUser authenticate(String username, String password) {
         SysUser user = lambdaQuery().eq(SysUser::getUsername, username.trim()).one();
-        if (user == null || !"ENABLED".equals(user.getStatus())
-                || !matchesPassword(password, user.getPasswordHash())) {
+        if (user == null || !matchesPassword(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
         }
+        if ("PENDING".equals(user.getApprovalStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "注册申请待管理员审核");
+        }
+        if ("REJECTED".equals(user.getApprovalStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "注册申请未通过审核");
+        }
+        if (!"ENABLED".equals(user.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "账号已停用");
+        }
         return user;
+    }
+
+    @Override
+    @Transactional
+    public SysUser register(UserRegistrationRequest request) {
+        validateUsername(request.username(), null);
+        SysUser user = new SysUser();
+        user.setUsername(request.username().trim());
+        user.setNickname(trimToNull(request.nickname()));
+        user.setPhone(trimToNull(request.phone()));
+        user.setEmail(trimToNull(request.email()));
+        user.setPasswordHash(hashPassword(request.password()));
+        user.setStatus("DISABLED");
+        user.setApprovalStatus("PENDING");
+        user.setDeleted(0);
+        save(user);
+        return user;
+    }
+
+    @Override
+    public List<SysUser> listPendingRegistrations() {
+        return lambdaQuery().eq(SysUser::getApprovalStatus, "PENDING")
+                .orderByAsc(SysUser::getCreatedAt).list();
+    }
+
+    @Override
+    @Transactional
+    public SysUser approveRegistration(Long userId, Long reviewerId) {
+        SysUser user = getActive(userId);
+        requirePendingApproval(user);
+        boolean updated = lambdaUpdate().eq(SysUser::getId, userId)
+                .eq(SysUser::getApprovalStatus, "PENDING")
+                .set(SysUser::getApprovalStatus, "APPROVED")
+                .set(SysUser::getStatus, "ENABLED")
+                .set(SysUser::getUpdatedBy, reviewerId)
+                .update();
+        if (!updated) throw new ResponseStatusException(HttpStatus.CONFLICT, "注册申请已被其他管理员处理");
+        return getActive(userId);
+    }
+
+    @Override
+    @Transactional
+    public SysUser rejectRegistration(Long userId, Long reviewerId) {
+        SysUser user = getActive(userId);
+        requirePendingApproval(user);
+        boolean updated = lambdaUpdate().eq(SysUser::getId, userId)
+                .eq(SysUser::getApprovalStatus, "PENDING")
+                .set(SysUser::getApprovalStatus, "REJECTED")
+                .set(SysUser::getStatus, "DISABLED")
+                .set(SysUser::getUpdatedBy, reviewerId)
+                .update();
+        if (!updated) throw new ResponseStatusException(HttpStatus.CONFLICT, "注册申请已被其他管理员处理");
+        return getActive(userId);
     }
 
     @Override
@@ -55,6 +117,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         apply(user, request);
         user.setPasswordHash(hashPassword(request.password()));
         user.setStatus(request.status() == null ? "ENABLED" : request.status());
+        user.setApprovalStatus("APPROVED");
         user.setDeleted(0);
         save(user);
         return user;
@@ -88,6 +151,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = getById(id);
         if (user == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "用户不存在");
         return user;
+    }
+
+    private void requirePendingApproval(SysUser user) {
+        if (!"PENDING".equals(user.getApprovalStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "该用户没有待处理的注册申请");
+        }
     }
 
     private void validateUsername(String username, Long excludeId) {

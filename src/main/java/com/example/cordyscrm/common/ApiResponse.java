@@ -31,6 +31,10 @@ public record ApiResponse<T>(
                 null, data, List.of(), LocalDateTime.now());
     }
 
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(ResultCode.SUCCESS.code(), message, null, data, List.of(), LocalDateTime.now());
+    }
+
     public static <T> ApiResponse<T> failure(int code, String message, String path) {
         return failure(code, message, path, List.of());
     }

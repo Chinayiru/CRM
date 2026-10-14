@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
   `email` VARCHAR(254) NULL COMMENT '邮箱',
   `department_id` BIGINT UNSIGNED NULL COMMENT '所属部门',
   `status` ENUM('ENABLED','DISABLED') NOT NULL DEFAULT 'ENABLED' COMMENT '账号状态',
+  `approval_status` ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'APPROVED' COMMENT '注册审核状态',
   `created_by` BIGINT UNSIGNED NULL COMMENT '创建人',
   `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间UTC',
   `updated_by` BIGINT UNSIGNED NULL COMMENT '更新人',
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sys_user_username` (`username`),
   KEY `idx_sys_user_department_status` (`department_id`,`status`,`deleted`),
+  KEY `idx_sys_user_approval` (`approval_status`,`created_at`,`deleted`),
   CONSTRAINT `fk_sys_user_department` FOREIGN KEY (`department_id`) REFERENCES `sys_dept` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB COMMENT='系统用户';
 

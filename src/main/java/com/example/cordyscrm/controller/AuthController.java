@@ -4,6 +4,8 @@ import com.example.cordyscrm.common.ApiResponse;
 import com.example.cordyscrm.dto.BootstrapAdminRequest;
 import com.example.cordyscrm.dto.LoginRequest;
 import com.example.cordyscrm.dto.LoginResponse;
+import com.example.cordyscrm.dto.SysUserResponse;
+import com.example.cordyscrm.dto.UserRegistrationRequest;
 import com.example.cordyscrm.security.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -26,6 +28,12 @@ public class AuthController {
     @Operation(security = {})
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(authService.login(request.username(), request.password()));
+    }
+
+    @PostMapping("/register")
+    @Operation(security = {})
+    public ApiResponse<SysUserResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
+        return ApiResponse.success("注册申请已提交，请等待管理员审核", authService.register(request));
     }
 
     @PostMapping("/bootstrap")
