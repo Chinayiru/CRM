@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { api } from '../api'
+import { formatDateTime, ownerLabel } from '../display'
 import type { CrmRecord } from '../types'
 
 // Dashboard aggregation endpoints are not available yet; cards, funnel, and trend are clearly marked demo data.
@@ -20,15 +21,38 @@ const funnel = [
 const months = ['5月','6月','7月','8月','9月','10月']
 const followRecords = ref<CrmRecord[]>([])
 const followError = ref('')
+/** 关联对象名称映射，键为“类型#ID”，用于把跟进记录的 targetId 显示为名称。 */
+const targets = ref<Record<string, string>>({})
 const demoFollow: CrmRecord[] = [
   { id: 1, contact: '张经理', customerName: '成都华星科技有限公司', content: '确认产品演示时间', createdAt: '今天 10:30', ownerName: '李明' },
   { id: 2, contact: '王总', customerName: '蓝海数字服务有限公司', content: '已发送方案报价', createdAt: '今天 09:20', ownerName: '陈晨' },
   { id: 3, contact: '赵女士', customerName: '北辰智能设备有限公司', content: '跟进采购计划', createdAt: '昨天 16:40', ownerName: '王芳' },
 ]
 
+/** 跟进对象的显示名：优先演示字段，其次查映射，最后回退为“客户#ID／商机#ID”。 */
+function targetLabel(item: CrmRecord) {
+  if (item.customerName) return item.customerName
+  const key = `${item.targetType}#${item.targetId}`
+  return targets.value[key] || (item.targetType === 'OPPORTUNITY' ? `商机#${item.targetId}` : `客户#${item.targetId}`)
+}
+/** 跟进人显示名：演示数据用 ownerName，真实数据按 ownerLabel 规则解析。 */
+function followOwner(item: CrmRecord) {
+  return item.ownerName || ownerLabel(item.ownerId)
+}
+
 onMounted(async () => {
-  try { followRecords.value = (await api.list('/api/follow-records')).slice(0, 5) }
-  catch { followError.value = '跟进记录接口暂不可用，当前展示演示数据'; followRecords.value = demoFollow }
+  try {
+    followRecords.value = (await api.list('/api/follow-records')).slice(0, 5)
+    // 跟进记录只存 targetId，需要客户与商机列表把 ID 还原为名称。
+    const [customerList, opportunityList] = await Promise.all([
+      api.list('/api/customers').catch(() => [] as CrmRecord[]),
+      api.list('/api/opportunities').catch(() => [] as CrmRecord[]),
+    ])
+    const map: Record<string, string> = {}
+    for (const row of customerList) map[`CUSTOMER#${row.id}`] = row.name
+    for (const row of opportunityList) map[`OPPORTUNITY#${row.id}`] = row.name
+    targets.value = map
+  } catch { followError.value = '跟进记录接口暂不可用，当前展示演示数据'; followRecords.value = demoFollow }
 })
 </script>
 
@@ -55,8 +79,8 @@ onMounted(async () => {
     <div class="panel-title">最近跟进 <span class="demo-label">{{ followError ? '演示数据' : '来自后端接口' }}</span></div><div class="panel-subtitle">最近更新的客户沟通记录</div>
     <div v-if="followRecords.length" class="follow-list">
       <div v-for="(item,index) in followRecords" :key="item.id || index" class="follow-row">
-        <el-avatar :size="27">{{ String(item.contact || item.ownerName || '客').slice(0,1) }}</el-avatar>
-        <span class="follow-name">{{ item.customerName || item.customerId || '客户记录' }}</span><span>{{ item.content || item.remark || '已更新跟进' }}</span><span class="follow-date">{{ item.createdAt || item.nextTime || '—' }}</span>
+        <el-avatar :size="27">{{ String(item.contact || followOwner(item) || '客').slice(0,1) }}</el-avatar>
+        <span class="follow-name">{{ targetLabel(item) }}</span><span>{{ item.content || item.remark || '已更新跟进' }}</span><span class="follow-owner">{{ followOwner(item) }}</span><span class="follow-date">{{ formatDateTime(item.createdAt || item.nextTime) }}</span>
       </div>
     </div><div v-else class="empty-note">暂无跟进记录</div>
   </section>
@@ -64,4 +88,5 @@ onMounted(async () => {
 
 <style scoped>
 .demo-label{font-size:10px;color:#a17a31;background:#fff7e5;border-radius:4px;padding:3px 6px;margin-left:7px;font-weight:400;vertical-align:1px}
+.follow-owner{color:#8d98a8;font-size:11px}
 </style>
