@@ -2,13 +2,13 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api, saveSession, setRememberMe } from '../api'
+import { api, rememberedUsername, saveSession, setRememberMe } from '../api'
 import { DEMO_PASSWORD, DEMO_USERNAME } from '../demo'
 
 const router = useRouter()
 const mode = ref<'login' | 'register'>('login')
 const loading = ref(false)
-const form = reactive({ username: '', password: '', captcha: '', nickname: '', phone: '', email: '', remember: localStorage.getItem('crm_remember') === '1' })
+const form = reactive({ username: rememberedUsername(), password: '', captcha: '', nickname: '', phone: '', email: '', remember: localStorage.getItem('crm_remember') === '1' })
 const demoCaptcha = ref(makeCaptcha())
 const isLogin = computed(() => mode.value === 'login')
 
@@ -83,6 +83,7 @@ async function submit() {
           <el-checkbox v-model="form.remember">记住我</el-checkbox>
           <el-link type="primary" :underline="false" @click="ElMessage.info('找回密码功能待后端接口支持')">忘记密码？</el-link>
         </div>
+        <div v-if="isLogin" class="muted-note" style="margin:-8px 0 14px">“记住我”只记住用户名，登录令牌不写入本地持久化存储，关闭浏览器后需重新登录。</div>
         <el-button type="primary" class="login-submit" :loading="loading" @click="submit">{{ isLogin ? '登 录' : '提交注册申请' }}</el-button>
         <div class="login-switch">
           <span>{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>

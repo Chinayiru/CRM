@@ -107,32 +107,42 @@ export const api = {
   },
 }
 
+const REMEMBER_KEY = 'crm_remember'
+const REMEMBER_USER_KEY = 'crm_remember_username'
+
+/** 登录成功后写入会话：令牌只进 sessionStorage，关闭浏览器即失效，不落本地持久化存储。 */
 export function saveSession(data: LoginData) {
   clearSession()
   if (data.token === 'local-demo-session-only') localStorage.setItem(DEMO_SESSION_KEY, '1')
-  const storage = sessionStorage.getItem('crm_remember') === '1' ? localStorage : sessionStorage
-  storage.setItem('crm_token', data.token)
-  storage.setItem('crm_user', JSON.stringify(data.user))
+  sessionStorage.setItem('crm_token', data.token)
+  sessionStorage.setItem('crm_user', JSON.stringify(data.user))
+  if (localStorage.getItem(REMEMBER_KEY) === '1') localStorage.setItem(REMEMBER_USER_KEY, data.user?.username || '')
 }
 
+/** “记住我”只记住用户名，不持久化令牌。 */
 export function setRememberMe(remember: boolean) {
-  if (remember) localStorage.setItem('crm_remember', '1')
-  else localStorage.removeItem('crm_remember')
-  sessionStorage.setItem('crm_remember', remember ? '1' : '0')
+  if (remember) localStorage.setItem(REMEMBER_KEY, '1')
+  else { localStorage.removeItem(REMEMBER_KEY); localStorage.removeItem(REMEMBER_USER_KEY) }
+}
+
+/** 上次勾选“记住我”时保存的用户名，用于登录页预填。 */
+export function rememberedUsername() {
+  return localStorage.getItem(REMEMBER_USER_KEY) || ''
 }
 
 export function getToken() {
-  return localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token')
+  return sessionStorage.getItem('crm_token')
 }
 
 export function isDemoSession() { return localStorage.getItem(DEMO_SESSION_KEY) === '1' }
 
 export function currentUser(): UserInfo | null {
-  try { return JSON.parse(localStorage.getItem('crm_user') || sessionStorage.getItem('crm_user') || 'null') as UserInfo | null }
+  try { return JSON.parse(sessionStorage.getItem('crm_user') || 'null') as UserInfo | null }
   catch { return null }
 }
 
 export function clearSession() {
+  // localStorage 中的令牌是旧版本残留，这里一并清理。
   localStorage.removeItem('crm_token')
   localStorage.removeItem('crm_user')
   localStorage.removeItem(DEMO_SESSION_KEY)
