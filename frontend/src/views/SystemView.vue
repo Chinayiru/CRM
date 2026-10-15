@@ -153,7 +153,7 @@ function fieldsFor(section:Section) {
 <template>
   <div class="page-heading"><div><h1>系统管理</h1><p>管理账号、角色权限、字典配置与注册申请</p></div></div>
   <div class="system-layout">
-    <aside class="surface system-nav"><button v-for="s in sections" :key="s.key" :class="{selected:active===s.key}" @click="active=s.key"><el-icon><component :is="s.icon" /></el-icon>{{ s.label }}<el-badge v-if="s.key==='approvals'&&active==='approvals'" :value="rows.length" /></button></aside>
+    <aside class="surface system-nav"><button v-for="s in sections" :key="s.key" :class="{selected:active===s.key}" @click="active=s.key"><el-icon><component :is="s.icon" /></el-icon>{{ s.label }}</button></aside>
     <section class="surface system-content">
       <div v-if="active==='home'" class="entry-cards">
         <button v-for="card in entryCards" :key="card.key" class="entry-card" @click="active=card.key">
@@ -206,5 +206,6 @@ function fieldsFor(section:Section) {
 .entry-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .entry-body strong{font-size:13px;color:#26374d}.entry-body small{font-size:11px;color:#8d98a8}
 .entry-link{font-size:11px;color:#1976e9;white-space:nowrap}
+.empty-note .el-button{margin-left:10px}
 @media(max-width:900px){.system-layout{grid-template-columns:1fr}.system-nav{display:flex;overflow-x:auto}.system-nav button{white-space:nowrap;width:auto}.content-toolbar{align-items:flex-start;flex-direction:column}.toolbar-actions{width:100%;flex-wrap:wrap}.toolbar-actions .el-input{flex:1}.entry-cards{grid-template-columns:1fr}}
 </style>

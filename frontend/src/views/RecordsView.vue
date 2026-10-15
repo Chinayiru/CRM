@@ -284,5 +284,6 @@ async function dropAt(stage: string) {
 .board-empty{border:1px dashed #dbe2ec;border-radius:7px;color:#a0aab8;text-align:center;padding:18px 6px;font-size:10px}
 .card-actions{border-top:1px solid #f0f2f6;margin-top:8px;padding-top:7px;font-size:10px}
 .lost-panel{margin-top:15px;padding:15px 18px}.lost-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.lost-list span{background:#f4f6f9;border-radius:6px;padding:7px 10px;font-size:11px}.lost-list small{color:#8d98a8;margin-left:6px}
+.empty-note .el-button{margin-left:10px}
 @media(max-width:1000px){.compact-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

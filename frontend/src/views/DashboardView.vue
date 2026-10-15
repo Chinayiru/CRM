@@ -88,5 +88,8 @@ onMounted(async () => {
 
 <style scoped>
 .demo-label{font-size:10px;color:#a17a31;background:#fff7e5;border-radius:4px;padding:3px 6px;margin-left:7px;font-weight:400;vertical-align:1px}
-.follow-owner{color:#8d98a8;font-size:11px}
+/* 最近跟进在原有 4 列基础上增加“跟进人”列，并保留窄屏下的三列回退。 */
+.follow-row{grid-template-columns:34px 1.1fr 1.5fr 86px 118px}
+.follow-owner{color:#8d98a8;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:720px){.follow-row{grid-template-columns:30px 1fr 1fr}.follow-owner{display:none}}
 </style>
